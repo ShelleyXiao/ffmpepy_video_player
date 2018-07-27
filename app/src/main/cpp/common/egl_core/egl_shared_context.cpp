@@ -1,9 +1,7 @@
-//
-// Created by ShaudXiao on 2018/7/24.
-//
-#include "./egl_shared_context.h"
+#include "egl_shared_context.h"
 
-#define LOG_TAG "egl_shared_context"
+#define LOG_TAG "EglShareContext"
+EglShareContext* EglShareContext::instance_ = new EglShareContext();
 
 EglShareContext::EglShareContext() {
     init();
@@ -47,3 +45,4 @@ void EglShareContext::init() {
         return;
     }
 }
+

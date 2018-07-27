@@ -5,7 +5,7 @@
 #ifndef ANDROIDFFMPEGPLAYER_EGL_SHARED_CONTEXT_H
 #define ANDROIDFFMPEGPLAYER_EGL_SHARED_CONTEXT_H
 
-#include "./egl_core.h"
+#include "egl_core.h"
 
 class EglShareContext {
 public:
@@ -20,8 +20,8 @@ public:
     }
 
 protected:
-     EglShareContext();
-     void init();
+    EglShareContext();
+    void init();
 private:
     static EglShareContext *instance_;
     EGLContext sharedContext;

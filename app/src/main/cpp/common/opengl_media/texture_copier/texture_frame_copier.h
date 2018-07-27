@@ -34,7 +34,7 @@ static char* NO_FILTER_FRAGMENT_SHADER =
 class TextureFrameCopier {
 public:
     TextureFrameCopier();
-    ~TextureFrameCopier();
+    virtual ~TextureFrameCopier();
 
     virtual bool init() = 0;
     virtual void renderWithCoords(TextureFrame* textureFrame, GLuint texId, GLfloat* vertexCoords, GLfloat* textureCoords) = 0;

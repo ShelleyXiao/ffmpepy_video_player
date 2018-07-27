@@ -4,9 +4,12 @@
 
 #include "handle.h"
 
+#define LOG_TAG "Handler"
+
 Handler::Handler(MessageQueue *mQueue) {
     this->mQueue = mQueue;
 }
+
 Handler::~Handler() {
 
 }

@@ -77,6 +77,9 @@ int MessageQueue::enqueueMessage(Message *msg) {
 
     pthread_cond_signal(&mCondition);
     pthread_mutex_unlock(&mLock);
+
+    return 0;
+
 }
 
 int MessageQueue::dequeueMessage(Message **msg, bool block) {

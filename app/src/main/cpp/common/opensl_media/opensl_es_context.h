@@ -37,7 +37,7 @@ private:
 
 public:
     static OpenSLESContext* GetInstance();
-    virtual ~OpenSLESContext();
+    virtual ~OpenSLESContext() {};
     SLEngineItf getEngine() {
         return engineEngine;
     }

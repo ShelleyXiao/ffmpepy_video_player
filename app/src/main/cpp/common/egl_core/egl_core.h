@@ -27,7 +27,7 @@ public:
        bool initWithSharedContext();
 
        EGLSurface createWindowSurface(ANativeWindow *_window);
-       EGLSurface createWindowSurface(int with, int height);
+       EGLSurface createOffscreenSurface(int with, int height);
 
        bool makeCurrent(EGLSurface eglSurface);
 

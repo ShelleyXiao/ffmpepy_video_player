@@ -19,6 +19,7 @@ public:
     float duration;
 
     MovieFrame();
+    virtual ~MovieFrame();
 
     virtual MovieFrameType getType() = 0;
 

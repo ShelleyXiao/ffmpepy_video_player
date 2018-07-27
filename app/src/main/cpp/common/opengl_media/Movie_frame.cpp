@@ -9,6 +9,7 @@ MovieFrame::MovieFrame() {
     duration = 0.0;
 }
 
+MovieFrame::~MovieFrame() {}
 
 AudioFrame::AudioFrame() {
     dataUseUp = true;

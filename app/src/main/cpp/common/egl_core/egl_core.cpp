@@ -121,7 +121,7 @@ EGLSurface EGLCore::createWindowSurface(ANativeWindow *_window) {
     return eglSurface;
 }
 
-EGLSurface EGLCore::createWindowSurface(int width, int height) {
+EGLSurface EGLCore::createOffscreenSurface(int width, int height) {
     EGLSurface eglSurface;
     EGLint PbufferAttributes[] = {EGL_WIDTH, width, EGL_HEIGHT, height, EGL_NONE, EGL_NONE};
     if (!(eglSurface = eglCreatePbufferSurface(display, config, PbufferAttributes))) {
@@ -129,6 +129,9 @@ EGLSurface EGLCore::createWindowSurface(int width, int height) {
     }
     return eglSurface;
 }
+
+
+
 
 bool EGLCore::makeCurrent(EGLSurface eglSurface) {
     return eglMakeCurrent(display, eglSurface, eglSurface, context);
@@ -150,6 +153,7 @@ int EGLCore::querySurface(EGLSurface surface, int what) {
 
 int EGLCore::setPresentationTime(EGLSurface surface, khronos_stime_nanoseconds_t nsecs) {
     pfneglPresentationTimeANDROID(display, surface, nsecs);
+    return 1;
 }
 
 
