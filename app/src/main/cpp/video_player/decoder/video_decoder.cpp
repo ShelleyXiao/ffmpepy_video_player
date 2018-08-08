@@ -230,7 +230,9 @@ int VideoDecoder::openInput() {
 	readLatestFrameTimemills = currentTimeMills();
 	isTimeout = false;
 	pFormatCtx = avformat_alloc_context();
-	int_cb = {VideoDecoder::interrupt_cb, this};
+//	int_cb = {VideoDecoder::interrupt_cb, this};  // c++11 特性
+    int_cb.callback = VideoDecoder::interrupt_cb;
+    int_cb.opaque  = this;
 	pFormatCtx->interrupt_callback = int_cb;
 	//打开一个文件 只是读文件头，并不会填充流信息 需要注意的是，此处的pFormatContext必须为NULL或由avformat_alloc_context分配得到
 	int openInputErrCode = 0;
@@ -310,7 +312,7 @@ int VideoDecoder::openVideoStream(int streamIndex) {
 	videoCodecCtx = videoStream->codec;
 	//2、通过codecContext的codec_id 找出对应的decoder
 	videoCodec = avcodec_find_decoder(videoCodecCtx->codec_id);
-	LOGI("CODEC_ID_H264 is %d videoCodecCtx->codec_id is %d", CODEC_ID_H264, videoCodecCtx->codec_id);
+	LOGI("CODEC_ID_H264 is %d videoCodecCtx->codec_id is %d", AV_CODEC_ID_H264, videoCodecCtx->codec_id);
 	if (videoCodec == NULL) {
 		LOGI("can not find the videoStream's Codec ...");
 		return -1;
@@ -379,7 +381,7 @@ int VideoDecoder::openAudioStream(int streamIndex) {
 	audio_stream_duration = pFormatCtx->duration;
 	audioCodecCtx = audioStream->codec;
 	//2、通过codecContext的codec_id 找出对应的decoder
-	LOGI("CODEC_ID_AAC is %d audioCodecCtx->codec_id is %d", CODEC_ID_AAC, audioCodecCtx->codec_id);
+	LOGI("CODEC_ID_AAC is %d audioCodecCtx->codec_id is %d", AV_CODEC_ID_AAC, audioCodecCtx->codec_id);
 	audioCodec = avcodec_find_decoder(audioCodecCtx->codec_id);
 	//audioCodec->name is pcm_s16le audioCodec->id is 65536 AV_CODEC_ID_PCM_S16LE is 65536
 //	LOGI("audioCodec->name is %s audioCodec->id is %d AV_CODEC_ID_PCM_S16LE is %d", audioCodec->name, audioCodec->id, AV_CODEC_ID_PCM_S16LE);

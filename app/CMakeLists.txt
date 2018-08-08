@@ -20,6 +20,7 @@ set(PATH_TO_PRE_BUILT ${PATH_TO_THIRDPARTY}/prebuilt/${ANDROID_ABI})
 add_definitions("
     -DGL_GLEXT_PROTOTYPES
     -DEGL_EGLEXT_PROTOTYPES
+    -D__STDC_FORMAT_MACROS
 ")
 
 ADD_SUBDIRECTORY(src/main/cpp)
@@ -65,6 +66,7 @@ target_link_libraries( native-lib
                        ${PATH_TO_PRE_BUILT}/libswscale.a
                        ${PATH_TO_PRE_BUILT}/libavutil.a
                        ${PATH_TO_PRE_BUILT}/libpostproc.a
-                       ${PATH_TO_PRE_BUILT}/libfdk-aac.a
-                       ${PATH_TO_PRE_BUILT}/libvo-aacenc.a
-                       ${PATH_TO_PRE_BUILT}/libx264.a)
+                      # ${PATH_TO_PRE_BUILT}/libfdk-aac.a
+                      # ${PATH_TO_PRE_BUILT}/libvo-aacenc.a
+                     #  ${PATH_TO_PRE_BUILT}/libx264.a
+                     )

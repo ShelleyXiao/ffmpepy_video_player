@@ -56,6 +56,9 @@ add_library(av-engine STATIC
         ${FILES_LIB_VIDEO_PLAYER_TEX_UPLOADER}
         )
 
+
+
+
 target_link_libraries(av-engine
                        # 引入系统的动态库
                        log
@@ -73,7 +76,4 @@ target_link_libraries(av-engine
                        ${PATH_TO_PRE_BUILT}/libswscale.a
                        ${PATH_TO_PRE_BUILT}/libavutil.a
                        ${PATH_TO_PRE_BUILT}/libpostproc.a
-                       ${PATH_TO_PRE_BUILT}/libfdk-aac.a
-                       ${PATH_TO_PRE_BUILT}/libvo-aacenc.a
-                       ${PATH_TO_PRE_BUILT}/libx264.a
                        )
