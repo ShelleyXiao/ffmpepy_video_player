@@ -1,32 +1,34 @@
-//
-// Created by ShaudXiao on 2018/7/27.
-//
-
 #include "video_player_controller.h"
 
 #define LOG_TAG "VideoPlayerController"
 
+
+/*
+ * class VideoPlayerController
+ *
+ */
 VideoPlayerController::VideoPlayerController() {
     userCancelled = false;
 
     videoOutput = NULL;
     audioOutput = NULL;
-
     synchronizer = NULL;
 
-    screenHeight = 0;
     screenWidth = 0;
+    screenHeight = 0;
 }
 
 VideoPlayerController::~VideoPlayerController() {
+    LOGI("~VideoPlayerController");
+
     videoOutput = NULL;
     audioOutput = NULL;
-
     synchronizer = NULL;
 }
 
-void VideoPlayerController::signalOutputFrameAvaiable() {
-    if (NULL != videoOutput) {
+void VideoPlayerController::signalOutputFrameAvailable() {
+//  LOGI("signalOutputFrameAvailable");
+    if (NULL != videoOutput){
         videoOutput->signalFrameAvailable();
     }
 }
@@ -36,15 +38,13 @@ bool VideoPlayerController::initAVSynchronizer() {
     return synchronizer->init(requestHeader, g_jvm, obj, minBufferedDuration, maxBufferedDuration);
 }
 
-
-void VideoPlayerController::initVideoOutput(ANativeWindow *window) {
-    if (NULL == window || userCancelled) {
+void  VideoPlayerController::initVideoOutput(ANativeWindow* window){
+    LOGI("VideoPlayerController::initVideoOutput beigin width:%d, height:%d", screenWidth, screenHeight);
+    if (window == NULL || userCancelled){
         return;
     }
-
     videoOutput = new VideoOutput();
-    videoOutput->initOutput(window, screenWidth, screenHeight, videoCallbackGetTex, this);
-
+    videoOutput->initOutput(window, screenWidth, screenHeight,videoCallbackGetTex, this);
 }
 
 bool VideoPlayerController::startAVSynchronizer() {
@@ -60,11 +60,10 @@ bool VideoPlayerController::startAVSynchronizer() {
             ret = this->initAudioOutput();
         }
     }
-
-    if (ret) {
+    if(ret){
         if (NULL != synchronizer && !synchronizer->isValid()) {
             ret = false;
-        } else {
+        } else{
             isPlaying = true;
             synchronizer->start();
             LOGI("call audioOutput start...");
@@ -74,86 +73,91 @@ bool VideoPlayerController::startAVSynchronizer() {
             LOGI("After call audioOutput start...");
         }
     }
-    LOGI("VideoPlayerController::startAVSynchronizer() init result:%s", (ret ? "success" : "fail"));
+
+    LOGI("VideoPlayerController::startAVSynchronizer() init result:%s", (ret? "success" : "fail"));
     this->setInitializedStatus(ret);
 
     return ret;
 }
 
-int VideoPlayerController::videoCallbackGetTex(FrameTexture **frameTex, void *ctx,
-                                               bool forceGetFrame) {
-    VideoPlayerController *controller = (VideoPlayerController *) ctx;
-
-    return controller->getCorrectRenderTexture(frameTex, forceGetFrame);
-
+int VideoPlayerController::videoCallbackGetTex(FrameTexture** frameTex, void* ctx, bool forceGetFrame){
+    VideoPlayerController* playerController = (VideoPlayerController*) ctx;
+    return playerController->getCorrectRenderTexture(frameTex, forceGetFrame);
 }
 
-int VideoPlayerController::getCorrectRenderTexture(FrameTexture **frameTex, bool forceGetFrame) {
+int VideoPlayerController::getCorrectRenderTexture(FrameTexture** frameTex, bool forceGetFrame){
     int ret = -1;
 
     if (!synchronizer->isDestroyed) {
-        if (synchronizer->isPlayCompleted()) {
+        if(synchronizer->isPlayCompleted()) {
+            LOGI("Video Render Thread render Completed We will Render First Frame...");
             (*frameTex) = synchronizer->getFirstRenderTexture();
         } else {
             (*frameTex) = synchronizer->getCorrectRenderTexture(forceGetFrame);
         }
         ret = 0;
     }
-
     return ret;
 }
 
-void VideoPlayerController::onSurfaceCreated(ANativeWindow *window, int width, int height) {
-    if (NULL != window) {
+void VideoPlayerController::onSurfaceCreated(ANativeWindow* window, int width, int height) {
+    LOGI("enter VideoPlayerController::onSurfaceCreated...");
+
+    if (window != NULL){
         this->window = window;
     }
 
-    if (userCancelled) {
+    if (userCancelled){
         return;
     }
 
-    if (width > 0 && height > 0) {
-        this->screenWidth = width;
+    if (width > 0 && height > 0){
         this->screenHeight = height;
+        this->screenWidth = width;
     }
-
     if (!videoOutput) {
         initVideoOutput(window);
-    } else {
+    }else{
         videoOutput->onSurfaceCreated(window);
     }
+    LOGI("Leave VideoPlayerController::onSurfaceCreated...");
 }
 
 void VideoPlayerController::onSurfaceDestroyed() {
+    LOGI("enter VideoPlayerController::onSurfaceDestroyed...");
     if (videoOutput) {
         videoOutput->onSurfaceDestroyed();
     }
 }
 
-int VideoPlayerController::audioCallbackFillData(byte *outData, size_t bufferSize, void *ctx) {
-    VideoPlayerController *playerController = (VideoPlayerController *) ctx;
+int VideoPlayerController::audioCallbackFillData(byte* outData, size_t bufferSize, void* ctx) {
+    VideoPlayerController* playerController = (VideoPlayerController*) ctx;
     return playerController->consumeAudioFrames(outData, bufferSize);
 }
 
 void VideoPlayerController::setInitializedStatus(bool initCode) {
+    LOGI("enter VideoPlayerController::setInitializedStatus...");
     JNIEnv *env = 0;
     int status = 0;
-    bool needAttch = false;
+    bool needAttach = false;
     status = g_jvm->GetEnv((void **) (&env), JNI_VERSION_1_4);
+
+    // don't know why, if detach directly, will crash
     if (status < 0) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != JNI_OK) {
             LOGE("%s: AttachCurrentThread() failed", __FUNCTION__);
             return;
         }
 
-        needAttch = true;
+        needAttach = true;
     }
 
-    jclass cls = env->GetObjectClass(obj);
-    jmethodID onInitializedFunc = env->GetMethodID(cls, "onInitializedFromNative", "(Z)V");
+    jclass jcls = env->GetObjectClass(obj);
+
+    jmethodID onInitializedFunc = env->GetMethodID(jcls, "onInitializedFromNative", "(Z)V");
     env->CallVoidMethod(obj, onInitializedFunc, initCode);
 
-    if (needAttch) {
+    if (needAttach) {
         if (g_jvm->DetachCurrentThread() != JNI_OK) {
             LOGE("%s: DetachCurrentThread() failed", __FUNCTION__);
         }
@@ -161,19 +165,15 @@ void VideoPlayerController::setInitializedStatus(bool initCode) {
     LOGI("leave VideoPlayerController::setInitializedStatus...");
 }
 
-bool VideoPlayerController::init(char *videoFileName, JavaVM *g_jvm, jobject obj,
-                                 int *max_analyze_duration, int analyzeCnt, int probesize,
-                                 bool fpsProbeSizeConfigured, float minBufferedDuration,
-                                 float maxBufferedDuration) {
-
+bool VideoPlayerController::init(char *srcFilenameParam, JavaVM *g_jvm, jobject obj, int* max_analyze_duration, int analyzeCnt, int probesize, bool fpsProbeSizeConfigured,
+        float minBufferedDuration, float maxBufferedDuration){
     isPlaying = false;
     synchronizer = NULL;
     audioOutput = NULL;
     videoOutput = NULL;
 
     requestHeader = new DecoderRequestHeader();
-    requestHeader->init(videoFileName, max_analyze_duration, analyzeCnt, probesize,
-                        fpsProbeSizeConfigured);
+    requestHeader->init(srcFilenameParam, max_analyze_duration, analyzeCnt, probesize, fpsProbeSizeConfigured);
     this->g_jvm = g_jvm;
     this->obj = obj;
     this->minBufferedDuration = minBufferedDuration;
@@ -190,36 +190,35 @@ int VideoPlayerController::getAudioChannels() {
     if (NULL != synchronizer) {
         channels = synchronizer->getAudioChannels();
     }
-
     return channels;
 }
 
 bool VideoPlayerController::initAudioOutput() {
+    LOGI("VideoPlayerController::initAudioOutput");
+
     int channels = this->getAudioChannels();
     if (channels < 0) {
+        LOGI("VideoDecoder get channels failed ...");
         return false;
     }
-
     int sampleRate = synchronizer->getAudioSampleRate();
     if (sampleRate < 0) {
+        LOGI("VideoDecoder get sampleRate failed ...");
         return false;
     }
-
     audioOutput = new AudioOutput();
-    SLresult lresult = audioOutput->initSoundTrack(channels, sampleRate,
-                                                   audioCallbackFillData, this);
-    if (SL_RESULT_SUCCESS != lresult) {
+    SLresult result = audioOutput->initSoundTrack(channels, sampleRate, audioCallbackFillData, this);
+    if (SL_RESULT_SUCCESS != result) {
+        LOGI("audio manager failed on initialized...");
         delete audioOutput;
         audioOutput = NULL;
         return false;
     }
-
     return true;
 }
 
-
 void VideoPlayerController::play() {
-    LOGI("VideoPlayerController::play %d ", (int) isPlaying);
+    LOGI("VideoPlayerController::play %d ", (int)isPlaying);
     if (this->isPlaying)
         return;
     this->isPlaying = true;
@@ -227,7 +226,6 @@ void VideoPlayerController::play() {
         audioOutput->play();
     }
 }
-
 
 void VideoPlayerController::pause() {
     LOGI("VideoPlayerController::pause");
@@ -242,31 +240,29 @@ void VideoPlayerController::pause() {
 void VideoPlayerController::resetRenderSize(int left, int top, int width, int height) {
     LOGI("VideoPlayerController::resetRenderSize");
     if (NULL != videoOutput) {
-        LOGI("VideoPlayerController::resetRenderSize NULL != videoOutput width:%d, height:%d",
-             width, height);
+        LOGI("VideoPlayerController::resetRenderSize NULL != videoOutput width:%d, height:%d", width, height);
         videoOutput->resetRenderSize(left, top, width, height);
     } else {
-        LOGI("VideoPlayerController::resetRenderSize NULL == videoOutput width:%d, height:%d",
-             width, height);
+        LOGI("VideoPlayerController::resetRenderSize NULL == videoOutput width:%d, height:%d", width, height);
         screenWidth = width;
         screenHeight = height;
     }
 }
 
-int VideoPlayerController::consumeAudioFrames(byte *outData, size_t bufferSize) {
+int VideoPlayerController::consumeAudioFrames(byte* outData, size_t bufferSize) {
     int ret = bufferSize;
-    if (this->isPlaying &&
-        synchronizer && !synchronizer->isDestroyed
-        && !synchronizer->isPlayCompleted()) {
+    if(this->isPlaying &&
+            synchronizer && !synchronizer->isDestroyed && !synchronizer->isPlayCompleted()) {
+//      LOGI("Before synchronizer fillAudioData...");
         ret = synchronizer->fillAudioData(outData, bufferSize);
-        signalOutputFrameAvaiable();
+//      LOGI("After synchronizer fillAudioData... ");
+        signalOutputFrameAvailable();
     } else {
+        LOGI("VideoPlayerController::consumeAudioFrames set 0");
         memset(outData, 0, bufferSize);
     }
-
     return ret;
 }
-
 
 float VideoPlayerController::getDuration() {
     if (NULL != synchronizer) {
@@ -310,43 +306,48 @@ void VideoPlayerController::seekToPosition(float position) {
     }
 }
 
-void VideoPlayerController::destroy() {
-    userCancelled  = true;
 
-    if(synchronizer) {
+void VideoPlayerController::destroy() {
+    LOGI("enter VideoPlayerController::destroy...");
+
+    userCancelled = true;
+
+    if (synchronizer){
+        //中断request
         synchronizer->interruptRequest();
     }
 
     pthread_join(initThreadThreadId, 0);
 
-    if(NULL != videoOutput) {
+    if (NULL != videoOutput) {
         videoOutput->stopOutput();
         delete videoOutput;
         videoOutput = NULL;
     }
 
-    if(NULL != audioOutput) {
+    if (NULL != synchronizer) {
         synchronizer->isDestroyed = true;
         this->pause();
+        LOGI("stop synchronizer ...");
         synchronizer->destroy();
 
-        if(NULL != audioOutput) {
+        LOGI("stop audioOutput ...");
+        if (NULL != audioOutput) {
             audioOutput->stop();
             delete audioOutput;
             audioOutput = NULL;
         }
-
         synchronizer->clearFrameMeta();
         delete synchronizer;
         synchronizer = NULL;
     }
-
-    if(NULL != requestHeader) {
+    if(NULL != requestHeader){
         requestHeader->destroy();
         delete requestHeader;
         requestHeader = NULL;
     }
 
+    LOGI("leave VideoPlayerController::destroy...");
 }
 
 void* VideoPlayerController::initThreadCallback(void *myself){

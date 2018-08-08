@@ -15,10 +15,10 @@ bool GPUTextureFrameUploader::initialize() {
 	TextureFrameUploader::initialize();
 	//init decodeTexId
 	textureFrame = new GPUTextureFrame();
-	textureFrame->createTextrue();
+	textureFrame->createTexture();
 
 	// todo: need write lock
-	decodeTexId = ((GPUTextureFrame *)textureFrame)->getDecodeTextId();
+	decodeTexId = ((GPUTextureFrame *)textureFrame)->getDecodeTexId();
 	LOGI("createTexture success!!!!!!!!!! %d", decodeTexId);
 
 	textureFrameCopier = new GPUTextureFrameCopier();

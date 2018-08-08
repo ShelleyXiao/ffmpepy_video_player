@@ -1,10 +1,5 @@
-//
-// Created by ShaudXiao on 2018/7/25.
-//
-
-#ifndef ANDROIDFFMPEGPLAYER_TEXTURE_FRAME_COPIER_H
-#define ANDROIDFFMPEGPLAYER_TEXTURE_FRAME_COPIER_H
-
+#ifndef TEXTURE_FRAME_COPIER_H
+#define TEXTURE_FRAME_COPIER_H
 
 #include "CommonTools.h"
 #include <GLES2/gl2.h>
@@ -13,27 +8,26 @@
 #include "egl_core/gl_tools.h"
 
 static char* NO_FILTER_VERTEX_SHADER =
-        "attribute vec4 vPosition;\n"
-                "attribute vec4 vTexCords;\n"
-                "varying vec2 yuvTexCoords;\n"
-                "uniform highp mat4 texMatrix;\n"
-                "uniform highp mat4 trans; \n"
-                "void main() {\n"
-                "  yuvTexCoords = (texMatrix*vTexCords).xy;\n"
-                "  gl_Position = trans * vPosition;\n"
-                "}\n";
+		"attribute vec4 vPosition;\n"
+		"attribute vec4 vTexCords;\n"
+		"varying vec2 yuvTexCoords;\n"
+		"uniform highp mat4 texMatrix;\n"
+		"uniform highp mat4 trans; \n"
+		"void main() {\n"
+		"  yuvTexCoords = (texMatrix*vTexCords).xy;\n"
+		"  gl_Position = trans * vPosition;\n"
+		"}\n";
 
 static char* NO_FILTER_FRAGMENT_SHADER =
-        "varying vec2 yuvTexCoords;\n"
-                "uniform sampler2D yuvTexSampler;\n"
-                "void main() {\n"
-                "  gl_FragColor = texture2D(yuvTexSampler, yuvTexCoords);\n"
-                "}\n";
-
+	    "varying vec2 yuvTexCoords;\n"
+	    "uniform sampler2D yuvTexSampler;\n"
+		"void main() {\n"
+		"  gl_FragColor = texture2D(yuvTexSampler, yuvTexCoords);\n"
+		"}\n";
 
 class TextureFrameCopier {
 public:
-    TextureFrameCopier();
+	TextureFrameCopier();
     virtual ~TextureFrameCopier();
 
     virtual bool init() = 0;
@@ -41,18 +35,16 @@ public:
     virtual void destroy();
 
 protected:
-    char *mVertexShader;
-    char *mFragmentShader;
+    char* mVertexShader;
+    char* mFragmentShader;
 
-    bool mIsInitialized;
+	bool mIsInitialized;
+	GLuint mGLProgId;
+	GLuint mGLVertexCoords;
+	GLuint mGLTextureCoords;
 
-    GLuint mGLProgId;
-    GLint mGLVertexCoords;
-    GLint mGLTextureCoords;
-
-    GLint mUniformTexMatrix;
-    GLint mUniformTransforms;
-
+	GLint mUniformTexMatrix;
+	GLint mUniformTransforms;
 };
 
-#endif //ANDROIDFFMPEGPLAYER_TEXTURE_FRAME_COPIER_H
+#endif // TEXTURE_FRAME_COPIER_H

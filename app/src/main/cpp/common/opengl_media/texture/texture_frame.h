@@ -1,26 +1,24 @@
-//
-// Created by ShaudXiao on 2018/7/25.
-//
-
-#ifndef ANDROIDFFMPEGPLAYER_TEXTURE_FRAME_H
-#define ANDROIDFFMPEGPLAYER_TEXTURE_FRAME_H
-
-#include <GLES2/gl2.h>
+#ifndef 	VIDEO_PLAYER_TEXTURE_FRAME_H
+#define VIDEO_PLAYER_TEXTURE_FRAME_H
 #include "CommonTools.h"
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
+/**
+ * Video Texture
+ */
 class TextureFrame {
 protected:
-    bool checkGlError(const char *op);
+	bool checkGlError(const char* op);
 
 public:
-    TextureFrame();
-    virtual ~TextureFrame();
+	TextureFrame();
+	virtual ~TextureFrame();
 
-    virtual bool createTextrue() = 0;
-    virtual void updateTexImage() = 0;
-    virtual bool bindTextrue(GLint *uniformSamplers) = 0;
-    virtual void dealloc() = 0;
-
+	virtual bool createTexture() = 0;
+	virtual void updateTexImage() = 0;
+	virtual bool bindTexture(GLint* uniformSamplers) = 0;
+	virtual void dealloc() = 0;
 };
 
-#endif //ANDROIDFFMPEGPLAYER_TEXTURE_FRAME_H
+#endif //VIDEO_PLAYER_TEXTURE_FRAME_H

@@ -1,21 +1,17 @@
-//
-// Created by ShaudXiao on 2018/7/25.
-//
-
-#include "handle.h"
+#include "./handler.h"
 
 #define LOG_TAG "Handler"
 
-Handler::Handler(MessageQueue *mQueue) {
-    this->mQueue = mQueue;
+/******************* Handler class *******************/
+Handler::Handler(MessageQueue* queue) {
+	this->mQueue = queue;
 }
 
 Handler::~Handler() {
-
 }
 
-int Handler::postMessage(Message *msg) {
-    msg->handler = this;
-    return mQueue->enqueueMessage(msg);
+int Handler::postMessage(Message* msg){
+	msg->handler = this;
+//	LOGI("enqueue msg what is %d", msg->getWhat());
+	return mQueue->enqueueMessage(msg);
 }
-

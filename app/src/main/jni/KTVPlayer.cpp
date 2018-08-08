@@ -30,26 +30,36 @@ JNIEXPORT jboolean JNICALL Java_com_zx_androidffmpegplayer_video_player_KTVPlaye
             env->GetIntArrayElements(max_analyze_duration, 0);
     bool initCode = videoPlayerController->init(videoMergeFilePaht, g_jvm, g_obj, max_anaylze_duration_params,
                                                     size, probesize, fpsProbeSizeConfigured, minBufferedDuration, maxBufferedDuration);
+    LOGI("############CONTRIL init = %d\n", initCode);
     videoPlayerController->onSurfaceCreated(window, width, height);
 
     env->ReleaseIntArrayElements(max_analyze_duration, max_anaylze_duration_params, 0);
-    env->ReleaseStringChars(videoMergeFilePathParam, (jchar *)videoMergeFilePaht);
+    env->ReleaseStringUTFChars(videoMergeFilePathParam, videoMergeFilePaht);
+	return initCode;
 }
 
 JNIEXPORT void JNICALL Java_com_zx_androidffmpegplayer_video_player_KTVPlayer_onSurfaceCreated(JNIEnv * env, jobject obj, jobject surface, jint width, jint height) {
+    LOGI("############CONTRIL init = %s", __func__);
     if(NULL != videoPlayerController) {
         window = ANativeWindow_fromSurface(env, surface);
         videoPlayerController->onSurfaceCreated(window, width, height);
     }
 }
 
-JNIEXPORT void JNICALL Java_com_zx_androidffmpegplayer_video_player_KTVPlayer_pause(JNIEnv * env, jobject obj) {
-    if(NULL != videoPlayerController) {
-        videoPlayerController->pause();
-    }
+JNIEXPORT void JNICALL Java_com_zx_androidffmpegplayer_video_player_KTVPlayer_onSurfaceDestroyed(JNIEnv * env, jobject obj, jobject surface) {
+	if (NULL != videoPlayerController) {
+		videoPlayerController->onSurfaceDestroyed();
+	}
+}
+
+JNIEXPORT void JNICALL Java_com_changba_songstudio_video_player_ChangbaPlayer_pause(JNIEnv * env, jobject obj) {
+	if(NULL != videoPlayerController) {
+		videoPlayerController->pause();
+	}
 }
 
 JNIEXPORT void JNICALL Java_com_zx_androidffmpegplayer_video_player_KTVPlayer_play(JNIEnv * env, jobject obj) {
+    LOGI("############CONTRIL init = %s", __func__);
     if(NULL != videoPlayerController) {
         videoPlayerController->play();
     }

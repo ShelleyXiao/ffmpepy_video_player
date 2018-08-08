@@ -215,12 +215,13 @@ public class ChangbaPlayerActivity extends Activity implements OnSeekBarChangeLi
 					}
 
 				};
-				playerController.setUseMediaCode(false);
+				playerController.setUseMediaCodec(true);
 				int width = getWindowManager().getDefaultDisplay().getWidth();
-				String path = "/mnt/sdcard/Movies/download/at.mp4";
+//				String path = "/mnt/sdcard/Movies/download/at.mp4";
+				String path = "/mnt/sdcard/media/at.mp4";
+//				String path = "/storage/emulated/0/media/test2.mp4";
 				playerController.init(path, holder.getSurface(), width, width, new OnInitializedCallback() {
 					public void onInitialized(OnInitialStatus onInitialStatus) {
-						// TODO: do your work here
 						Log.i("problem", "onInitialized called");
 					}
 				});

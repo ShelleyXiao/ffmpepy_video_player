@@ -14,7 +14,7 @@ bool YUVTextureFrameUploader::initialize() {
 	TextureFrameUploader::initialize();
 	//init decodeTexId
 	textureFrame = new YUVTextureFrame();
-	textureFrame->createTextrue();
+	textureFrame->createTexture();
 	textureFrameCopier = new YUVTextureFrameCopier();
 	textureFrameCopier->init();
 	return true;

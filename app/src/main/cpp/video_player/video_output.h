@@ -9,7 +9,7 @@
 #include "./common/circle_texture_queue.h"
 #include "egl_core/egl_core.h"
 #include "CommonTools.h"
-#include "message_queue/handle.h"
+#include "message_queue/handler.h"
 #include "message_queue/message_queue.h"
 typedef enum {
 	VIDEO_OUTPUT_MESSAGE_CREATE_EGL_CONTEXT,

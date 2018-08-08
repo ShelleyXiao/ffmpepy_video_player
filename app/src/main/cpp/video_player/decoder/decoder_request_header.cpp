@@ -7,6 +7,5 @@ DecoderRequestHeader::DecoderRequestHeader() {
 	maxAnalyzeDurations = NULL;
 	extraData = NULL;
 }
-
 DecoderRequestHeader::~DecoderRequestHeader() {
 }

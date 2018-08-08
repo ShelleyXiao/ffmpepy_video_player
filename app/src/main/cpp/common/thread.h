@@ -1,36 +1,33 @@
-//
-// Created by ShaudXiao on 2018/7/24.
-//
-
-#ifndef ANDROIDFFMPEGPLAYER_THREAD_H
-#define ANDROIDFFMPEGPLAYER_THREAD_H
+#ifndef SONG_STUDIO_THREAD_H
+#define SONG_STUDIO_THREAD_H
 
 #include <pthread.h>
 #include "CommonTools.h"
 
 class Thread {
 public:
-    Thread();
-    ~Thread();
+	Thread();
+	~Thread();
 
-    void start();
-    void startAsync();
-    int wait();
+	void start();
+	void startAsync();
+	int wait();
 
-    void waitOnNotify();
-    void notify();
-    virtual void stop();
+	void waitOnNotify();
+	void notify();
+	virtual void stop();
 
 protected:
-    bool mRunning;
-    virtual void handleRun(void *ptr);
+	bool mRunning;
 
-private:
-    pthread_t mThread;
-    pthread_mutex_t mLock;
-    pthread_cond_t mCondition;
+	virtual void handleRun(void* ptr);
 
-    static void *startThread(void *ptr);
+protected:
+	pthread_t mThread;
+	pthread_mutex_t mLock;
+	pthread_cond_t mCondition;
+
+	static void* startThread(void* ptr);
 };
 
-#endif //ANDROIDFFMPEGPLAYER_THREAD_H
+#endif //SONG_STUDIO_THREAD_H

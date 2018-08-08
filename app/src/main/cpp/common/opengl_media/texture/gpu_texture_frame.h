@@ -1,38 +1,29 @@
-//
-// Created by ShaudXiao on 2018/7/25.
-//
+#ifndef 	VIDEO_PLAYER_GPU_TEXTURE_FRAME_H
+#define VIDEO_PLAYER_GPU_TEXTURE_FRAME_H
 
-#ifndef ANDROIDFFMPEGPLAYER_GPUTEXTUREFRAME_H
-#define ANDROIDFFMPEGPLAYER_GPUTEXTUREFRAME_H
-
-#include <GLES2/gl2.h>
-#include <common/opengl_media/movie_frame.h>
 #include "texture_frame.h"
 
-class GPUTextureFrame : public TextureFrame {
+/**
+ * Video Host Texture
+ */
+class GPUTextureFrame: public TextureFrame {
 private:
-
-    int initTexture();
-
-    GLuint decodeTexId;
+	GLuint decodeTexId;
+	int initTexture();
 
 public:
-    GPUTextureFrame();
+	GPUTextureFrame();
+	virtual ~GPUTextureFrame();
 
-    virtual ~GPUTextureFrame();
+	bool createTexture();
+	void updateTexImage();
+	bool bindTexture(GLint* uniformSamplers);
+	void dealloc();
 
-    bool createTextrue();
-
-    void updateTexImage();
-
-    bool bindTextrue(GLint *uniformSamplers);
-
-    void dealloc();
-
-    GLuint getDecodeTextId() {
-        return decodeTexId;
-    }
+	GLuint getDecodeTexId() {
+		return decodeTexId;
+	};
 
 };
 
-#endif //ANDROIDFFMPEGPLAYER_YUVTEXTUREFRAME_H
+#endif //VIDEO_PLAYER_GPU_TEXTURE_FRAME_H

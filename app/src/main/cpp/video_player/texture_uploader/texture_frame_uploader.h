@@ -8,7 +8,7 @@
 #include "egl_core/egl_core.h"
 #include "opengl_media/texture/texture_frame.h"
 #include "opengl_media/texture/gpu_texture_frame.h"
-#include "opengl_media/texture/YUVTextureFrame.h"
+#include "opengl_media/texture/yuv_texture_frame.h"
 #include "opengl_media/texture_copier/texture_frame_copier.h"
 #include "opengl_media/texture_copier/gpu_texture_frame_copier.h"
 #include "opengl_media/texture_copier/yuv_texture_frame_copier.h"

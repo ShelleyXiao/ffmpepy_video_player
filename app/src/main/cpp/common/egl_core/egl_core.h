@@ -1,9 +1,5 @@
-//
-// Created by ShaudXiao on 2018/7/24.
-//
-
-#ifndef ANDROIDFFMPEGPLAYER_EGL_CORE_H
-#define ANDROIDFFMPEGPLAYER_EGL_CORE_H
+#ifndef ANDROID_EGL_CORE_H_
+#define ANDROID_EGL_CORE_H_
 
 #include "CommonTools.h"
 #include <pthread.h>
@@ -12,48 +8,44 @@
 #include <EGL/eglext.h>
 #include <KHR/khrplatform.h>
 
-
-
 typedef EGLBoolean (EGLAPIENTRYP PFNEGLPRESENTATIONTIMEANDROIDPROC)(EGLDisplay display, EGLSurface surface, khronos_stime_nanoseconds_t time);
 
 class EGLCore {
-
 public:
-       EGLCore();
-       virtual ~EGLCore();
+	EGLCore();
+    virtual ~EGLCore();
 
-       bool init();
-       bool initContext(EGLContext sharedContext);
-       bool initWithSharedContext();
+    bool init();
 
-       EGLSurface createWindowSurface(ANativeWindow *_window);
-       EGLSurface createOffscreenSurface(int with, int height);
+    bool init(EGLContext sharedContext);
 
-       bool makeCurrent(EGLSurface eglSurface);
+    bool initWithSharedContext();
 
-       void doneCurrent();
+  	EGLSurface createWindowSurface(ANativeWindow* _window);
+    EGLSurface createOffscreenSurface(int width, int height);
 
-       bool swapBuffers(EGLSurface eglSurface);
+    bool makeCurrent(EGLSurface eglSurface);
 
-       int querySurface(EGLSurface surface, int what);
+    void doneCurrent();
 
-       int setPresentationTime(EGLSurface surface,  khronos_stime_nanoseconds_t nsecs);
+    bool swapBuffers(EGLSurface eglSurface);
 
-       void releaseSurface(EGLSurface eglSurface);
+    int querySurface(EGLSurface surface, int what);
 
-       void release();
+    int setPresentationTime(EGLSurface surface, khronos_stime_nanoseconds_t nsecs);
 
-       EGLContext getContext();
-       EGLDisplay getDisplay();
-       EGLConfig getConfig();
+    void releaseSurface(EGLSurface eglSurface);
+    void release();
+
+    EGLContext getContext();
+    EGLDisplay getDisplay();
+    EGLConfig getConfig();
 
 private:
-        EGLDisplay display;
-        EGLConfig  config;
-        EGLContext context;
+	EGLDisplay display;
+	EGLConfig config;
+	EGLContext context;
 
-    PFNEGLPRESENTATIONTIMEANDROIDPROC pfneglPresentationTimeANDROID;
+	PFNEGLPRESENTATIONTIMEANDROIDPROC pfneglPresentationTimeANDROID;
 };
-
-
-#endif //ANDROIDFFMPEGPLAYER_EGL_CORE_H
+#endif // ANDROID_EGL_CORE_H_
