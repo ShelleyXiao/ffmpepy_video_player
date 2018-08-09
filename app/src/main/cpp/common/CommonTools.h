@@ -200,6 +200,17 @@ inline void convertShortArrayFromByteArray(byte *bytearray, int size, SInt16 *sh
 	delete[] bytes;
 }
 
+inline void convertShortArrayFromByteArray2(byte *bytearray, int size, SInt16 *shortarray) {
+	byte* bytes = new byte[2];
+	for (int i = 0; i < size / 2; i++) {
+		bytes[1] = bytearray[2 * i];
+		bytes[0] = bytearray[2 * i + 1];
+		SInt16 source = convertshort(bytes);
+		shortarray[i] = source;
+	}
+	delete[] bytes;
+}
+
 //客户端代码需要根据accompanySampleRate / audioSampleRate算出transfer_ratio;
 //以及根据(int)((float)(sample_count) / accompanySampleRate * audioSampleRate)算出transfered_sample_count;
 //并且分配出samples_transfered---将伴奏mp3解析成为pcm的short数组，需要先进行转换为录音的采样频率

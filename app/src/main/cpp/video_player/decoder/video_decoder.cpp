@@ -434,6 +434,9 @@ int VideoDecoder::openAudioStream(int streamIndex) {
 	avStreamFPSTimeBase(audioStream, 0.025, 0, &audioTimeBase);
 	LOGI(
 			"sample rate is %d channels is %d audioCodecCtx->sample_fmt is %d and AV_SAMPLE_FMT_S16 is %d audioTimeBase: %f", audioCodecCtx->sample_rate, audioCodecCtx->channels, audioCodecCtx->sample_fmt, AV_SAMPLE_FMT_S16, audioTimeBase);
+
+
+
 	return 1;
 }
 
@@ -867,7 +870,9 @@ AudioFrame * VideoDecoder::handleAudioFrame() {
 	}
 	int numChannels = audioCodecCtx->channels;
 	int numFrames = 0;
-	void * audioData;
+    uint8_t * audioData;
+    uint8_t *audioDataBuf;
+    byte *audioOutBuf;
 	if (swrContext) {
 //		LOGI("start resample audio...");
 		const int ratio = 2;
@@ -893,14 +898,16 @@ AudioFrame * VideoDecoder::handleAudioFrame() {
 		}
 //		LOGI("define and assign outbuf");
 		byte *outbuf[2] = { (byte*) swrBuffer, NULL };
+
 //		LOGI("start swr_convert");
-		numFrames = swr_convert(swrContext, outbuf, audioFrame->nb_samples * ratio, (const uint8_t **) audioFrame->data, audioFrame->nb_samples);
+		numFrames = swr_convert(swrContext, &audioDataBuf, audioFrame->nb_samples * ratio, (const uint8_t **) audioFrame->data, audioFrame->nb_samples);
 //		LOGI("swr_convert success and numFrames is %d", numFrames);
 		if (numFrames < 0) {
 			LOGI("fail resample audio");
 			return NULL;
 		}
-		audioData = swrBuffer;
+//		audioData = swrBuffer;
+		audioData = audioDataBuf;
 	} else {
 		if (audioCodecCtx->sample_fmt != AV_SAMPLE_FMT_S16) {
 			LOGI("bucheck, audio format is invalid");
@@ -916,6 +923,36 @@ AudioFrame * VideoDecoder::handleAudioFrame() {
 //	LOGI("decode audio bufferSize expected 1024  actual is %d audio position is %.4f", numElements, position);
 	byte* buffer = NULL;
 
+    /*****************sound touch**************/
+	if(soundTouch == NULL) {
+		soundTouch = new SoundTouch();
+		//sampleBuffer = static_cast<SAMPLETYPE *>(malloc(audioCodecCtx->sample_rate * audioCodecCtx->channels * 2));
+		soundTouch->setSampleRate(audioCodecCtx->sample_rate);
+		soundTouch->setChannels(audioCodecCtx->channels);
+
+	}
+
+	soundTouch->setPitch(1.5f);
+	soundTouch->setRate(1.0f);
+	int bytes_per_sample = av_get_bytes_per_sample(audioCodecCtx->sample_fmt);
+    int resampled_data_size = numFrames * audioCodecCtx->channels * bytes_per_sample;
+
+//    sampleBuffer = static_cast<SAMPLETYPE *>(malloc(resampled_data_size / 2));
+//
+//    for(int i = 0; i < resampled_data_size / 2 + 1; i++)
+//    {
+//        sampleBuffer[i] = (audioData[i * 2] | ((audioData[i * 2 + 1]) << 8));
+//    }
+
+
+//    LOGI("************* ADJSUT PICTHC ********bytes_per_sample = %d", bytes_per_sample);
+//	translate(sampleBuffer, resampled_data_size / 2 , bytes_per_sample,
+//			  audioCodecCtx->channels, audioCodecCtx->sample_rate);
+////    LOGI("************* ADJSUT PICTHC *************1*");
+//    /*****************sound touch**************/
+//
+//    convertByteArrayFromShortArray(sampleBuffer, resampled_data_size, audioOutBuf);
+
 	int actualSize = -1;
 	if (mUploaderCallback)
 		actualSize = mUploaderCallback->processAudioData((short*)audioData, numElements, position, &buffer);
@@ -927,10 +964,11 @@ AudioFrame * VideoDecoder::handleAudioFrame() {
 		return NULL;
 	}
 
+
 	AudioFrame *frame = new AudioFrame();
 	/** av_frame_get_best_effort_timestamp 实际上获取AVFrame的 int64_t best_effort_timestamp; 这个Filed **/
 	frame->position = position;
-	frame->samples = buffer;
+	frame->samples = audioOutBuf;
 	frame->size = actualSize;
 	frame->duration = av_frame_get_pkt_duration(audioFrame) * audioTimeBase;
 	if (frame->duration == 0) {
@@ -939,7 +977,7 @@ AudioFrame * VideoDecoder::handleAudioFrame() {
 		// so in this case must compute duration
 		frame->duration = frame->size / (sizeof(float) * numChannels * 2 * audioCodecCtx->sample_rate);
 	}
-//	LOGI("AFD: %.4f %.4f | %.4f ", frame->position, frame->duration, frame->size / (8.0 * 44100.0));
+	LOGI("AFD: %.4f %.4f | %.4f ", frame->position, frame->duration, frame->size / (8.0 * 44100.0));
 //	LOGI("leave VideoDecoder::handleAudioFrame()...");
 	return frame;
 }

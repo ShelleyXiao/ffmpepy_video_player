@@ -21,6 +21,8 @@ include_directories(BEFORE ${PATH_TO_THIRDPARTY}/ffmpeg/include/)
 include_directories(${PATH_TO_AV_ENGINE}/)
 include_directories(${PATH_TO_AV_ENGINE}/common/)
 include_directories(${PATH_TO_AV_ENGINE}/video_player/)
+include_directories(${PATH_TO_THIRDPARTY}/soundtouch/include)
+include_directories(${PATH_TO_THIRDPARTY}/soundtouch/src)
 
 file(GLOB FILES_LIB_COMMON "${PATH_TO_AV_ENGINE}/common/*.cpp")
 file(GLOB FILES_LIB_COMMON_EGL_CORE "${PATH_TO_AV_ENGINE}/common/egl_core/*.cpp")
@@ -39,6 +41,10 @@ file(GLOB FILES_LIB_VIDEO_PLAYER_DECODER "${PATH_TO_AV_ENGINE}/video_player/deco
 file(GLOB FILES_LIB_VIDEO_PLAYER_SYNC "${PATH_TO_AV_ENGINE}/video_player/sync/*.cpp")
 file(GLOB FILES_LIB_VIDEO_PLAYER_TEX_UPLOADER "${PATH_TO_AV_ENGINE}/video_player/texture_uploader/*.cpp")
 
+file(GLOB FILES_LIB_SOUNCTOUCH_SRC "${PATH_TO_THIRDPARTY}/soundtouch/src/*cpp")
+
+file(GLOB FILES_LIB_SOUNDTOUCH_WRAAPPER "${PATH_TO_AV_ENGINE}/common/soundtouch/*cpp")
+
 add_library(av-engine STATIC
         ${FILES_LIB_COMMON}
         ${FILES_LIB_COMMON_EGL_CORE}
@@ -54,6 +60,9 @@ add_library(av-engine STATIC
         ${FILES_LIB_VIDEO_PLAYER_DECODER}
         ${FILES_LIB_VIDEO_PLAYER_SYNC}
         ${FILES_LIB_VIDEO_PLAYER_TEX_UPLOADER}
+
+        ${FILES_LIB_SOUNCTOUCH_SRC}
+        ${FILES_LIB_SOUNDTOUCH_WRAAPPER}
         )
 
 
