@@ -52,7 +52,7 @@ JNIEXPORT void JNICALL Java_com_zx_androidffmpegplayer_video_player_KTVPlayer_on
 	}
 }
 
-JNIEXPORT void JNICALL Java_com_changba_songstudio_video_player_ChangbaPlayer_pause(JNIEnv * env, jobject obj) {
+JNIEXPORT void JNICALL Java_com_zx_androidffmpegplayer_video_player_KTVPlayer_pause(JNIEnv * env, jobject obj) {
 	if(NULL != videoPlayerController) {
 		videoPlayerController->pause();
 	}

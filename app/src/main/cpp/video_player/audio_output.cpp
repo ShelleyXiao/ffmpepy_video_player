@@ -58,7 +58,7 @@ SLresult AudioOutput::play() {
 }
 
 SLresult AudioOutput::start() {
-//	LOGI("Set the audio player state start");
+	LOGI("Set the audio player state start");
 	// Set the audio player state playing
 	SLresult result = setAudioPlayerStatePlaying();
 	if (SL_RESULT_SUCCESS != result) {
