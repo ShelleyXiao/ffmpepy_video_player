@@ -232,10 +232,11 @@ int VideoDecoder::openInput() {
     readLatestFrameTimemills = currentTimeMills();
     isTimeout = false;
     pFormatCtx = avformat_alloc_context();
-//	int_cb = {VideoDecoder::interrupt_cb, this};  // c++11 特性
+//	int_cb = {VideoDecoder::interrupt_cb, this};
     int_cb.callback = VideoDecoder::interrupt_cb;
     int_cb.opaque = this;
     pFormatCtx->interrupt_callback = int_cb;
+
     //打开一个文件 只是读文件头，并不会填充流信息 需要注意的是，此处的pFormatContext必须为NULL或由avformat_alloc_context分配得到
     int openInputErrCode = 0;
     if ((openInputErrCode = this->openFormatInput(videoSourceURI)) != 0) {
@@ -316,7 +317,7 @@ int VideoDecoder::openVideoStream(int streamIndex) {
     videoCodecCtx = videoStream->codec;
     //2、通过codecContext的codec_id 找出对应的decoder
     videoCodec = avcodec_find_decoder(videoCodecCtx->codec_id);
-    LOGI("CODEC_ID_H264 is %d videoCodecCtx->codec_id is %d", AV_CODEC_ID_H264,
+    LOGI("CODEC_ID_H264 is %d videoCodecCtx->codec_id is %d", CODEC_ID_H264,
          videoCodecCtx->codec_id);
     if (videoCodec == NULL) {
         LOGI("can not find the videoStream's Codec ...");
@@ -328,7 +329,7 @@ int VideoDecoder::openVideoStream(int streamIndex) {
         return -1;
     }
     //4、分配图像缓存:准备给即将解码的图片分配内存空间 调用 avcodec_alloc_frame 分配帧,videoFrame用于存储解码后的数据
-    videoFrame = avcodec_alloc_frame();
+    videoFrame = av_frame_alloc();
     if (videoFrame == NULL) {
         LOGI("alloc video frame failed...");
         avcodec_close(videoCodecCtx);
@@ -388,8 +389,7 @@ int VideoDecoder::openAudioStream(int streamIndex) {
     audio_stream_duration = pFormatCtx->duration;
     audioCodecCtx = audioStream->codec;
     //2、通过codecContext的codec_id 找出对应的decoder
-    LOGI("CODEC_ID_AAC is %d audioCodecCtx->codec_id is %d", AV_CODEC_ID_AAC,
-         audioCodecCtx->codec_id);
+    LOGI("CODEC_ID_AAC is %d audioCodecCtx->codec_id is %d", CODEC_ID_AAC, audioCodecCtx->codec_id);
     audioCodec = avcodec_find_decoder(audioCodecCtx->codec_id);
     //audioCodec->name is pcm_s16le audioCodec->id is 65536 AV_CODEC_ID_PCM_S16LE is 65536
 //	LOGI("audioCodec->name is %s audioCodec->id is %d AV_CODEC_ID_PCM_S16LE is %d", audioCodec->name, audioCodec->id, AV_CODEC_ID_PCM_S16LE);
@@ -405,7 +405,7 @@ int VideoDecoder::openAudioStream(int streamIndex) {
     }
     //4、判断是否需要resampler
     if (!audioCodecIsSupported(audioCodecCtx)) {
-        LOGI("************because of audio Codec Is Not Supported so we will init swresampler...");
+        LOGI("because of audio Codec Is Not Supported so we will init swresampler...");
         /**
          * 初始化resampler
          * @param s               Swr context, can be NULL
@@ -433,7 +433,7 @@ int VideoDecoder::openAudioStream(int streamIndex) {
         }
     }
     //5、分配audio frame
-    audioFrame = avcodec_alloc_frame();
+    audioFrame = av_frame_alloc();
     if (audioFrame == NULL) {
         LOGI("alloc audio frame failed...");
         if (swrContext)
@@ -448,8 +448,6 @@ int VideoDecoder::openAudioStream(int streamIndex) {
             "sample rate is %d channels is %d audioCodecCtx->sample_fmt is %d and AV_SAMPLE_FMT_S16 is %d audioTimeBase: %f",
             audioCodecCtx->sample_rate, audioCodecCtx->channels, audioCodecCtx->sample_fmt,
             AV_SAMPLE_FMT_S16, audioTimeBase);
-
-
     return 1;
 }
 
@@ -882,13 +880,9 @@ AudioFrame *VideoDecoder::handleAudioFrame() {
     }
     int numChannels = audioCodecCtx->channels;
     int numFrames = 0;
-
-    uint8_t *audioData;
-    uint8_t *audioDataBuf;
-    byte *audioOutBuf;
-
+    void *audioData;
     if (swrContext) {
-        LOGI("start resample audio...");
+//		LOGI("start resample audio...");
         const int ratio = 2;
         const int bufSize = av_samples_get_buffer_size(NULL, numChannels,
                                                        audioFrame->nb_samples * ratio,
@@ -914,19 +908,15 @@ AudioFrame *VideoDecoder::handleAudioFrame() {
         }
 //		LOGI("define and assign outbuf");
         byte *outbuf[2] = {(byte *) swrBuffer, NULL};
-
 //		LOGI("start swr_convert");
         numFrames = swr_convert(swrContext, outbuf, audioFrame->nb_samples * ratio,
                                 (const uint8_t **) audioFrame->data, audioFrame->nb_samples);
-        int dst_linesize;
-        int convetSize = av_samples_get_buffer_size(&dst_linesize, 2,
-                                                     numFrames, AV_SAMPLE_FMT_S16, 1);
-		LOGI("swr_convert success and numFrames is %d convetSize = %d", numFrames, convetSize);
+//		LOGI("swr_convert success and numFrames is %d", numFrames);
         if (numFrames < 0) {
             LOGI("fail resample audio");
             return NULL;
         }
-        audioData = (uint8_t *) swrBuffer;
+        audioData = swrBuffer;
     } else {
         if (audioCodecCtx->sample_fmt != AV_SAMPLE_FMT_S16) {
             LOGI("bucheck, audio format is invalid");
@@ -935,55 +925,49 @@ AudioFrame *VideoDecoder::handleAudioFrame() {
         audioData = audioFrame->data[0];
         numFrames = audioFrame->nb_samples;
     }
-	LOGI("start process audioData and numFrames is %d numChannels is %d", numFrames, numChannels);
+//	LOGI("start process audioData and numFrames is %d numChannels is %d", numFrames, numChannels);
     const int numElements = numFrames * numChannels;
     float position = av_frame_get_best_effort_timestamp(audioFrame) * audioTimeBase;
-    LOGI("begin processAudioData...");
+//	LOGI("begin processAudioData...");
 //	LOGI("decode audio bufferSize expected 1024  actual is %d audio position is %.4f", numElements, position);
-    byte *buffer = NULL;
-
+    uint8_t *audioData2 = (uint8_t *) audioData;
     /*****************sound touch**************/
     if (soundTouch == NULL) {
         soundTouch = new SoundTouch();
         //sampleBuffer = static_cast<SAMPLETYPE *>(malloc(audioCodecCtx->sample_rate * audioCodecCtx->channels * 2));
         soundTouch->setSampleRate(AV_SAMPLE_FMT_S16);
-        soundTouch->setChannels(audioCodecCtx->channels);
+        soundTouch->setChannels(2);
+        soundTouch->setTempo(1.0f);
+        soundTouch->setPitch(1.3f);
 
     }
     if (soundTouch != NULL) {
-        LOGI("DEBUG ***************** 1 %d", audioCodecCtx->sample_fmt);
-        soundTouch->setPitch(1.5f);
-        soundTouch->setRate(1.0f);
-        LOGI("DEBUG ***************** 2");
 
         int bytes_per_sample = av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
-        LOGI("DEBUG ***************** 3");
+//        LOGI("DEBUG ***************** 3");
         int resampled_data_size = numElements * bytes_per_sample;
-        LOGI("************* ADJSUT PICTHC ********bytes_per_sample = %d", bytes_per_sample);
-        sampleBuffer = static_cast<SAMPLETYPE *>(malloc(resampled_data_size));
-        LOGI("*******************resampled_data_size = %d ", resampled_data_size);
-        LOGI("*******************audioData size  = %d ", sizeof(audioData)/ sizeof(uint8_t));
+//        LOGI("************* ADJSUT PICTHC ********bytes_per_sample = %d，resampled_data_size = %d",
+//             bytes_per_sample, resampled_data_size);
+//        sampleBuffer = static_cast<SAMPLETYPE *>(malloc(resampled_data_size));
+        sampleBuffer = new SAMPLETYPE[swrBufferSize];
+//        LOGI("*******************resampled_data_size = %d ", resampled_data_size);
+        if (sampleBuffer != NULL) {
+            for (int i = 0; i < resampled_data_size / 2 + 1; i++) {
+                sampleBuffer[i] = (audioData2[i * 2] | ((audioData2[i * 2 + 1]) << 8));
+//                LOGI("DEBUG I = %d", i);
+            }
+            int nb_samplers = 0;
+            soundTouch->putSamples(sampleBuffer, numFrames);
+            do {
+                // 接收处理后的sample
+                nb_samplers = soundTouch->receiveSamples(sampleBuffer, swrBufferSize);
 
-        for (int i = 0; i < resampled_data_size / 2 + 1; i++) {
-            sampleBuffer[i] = (audioData[i * 2] | ((audioData[i * 2 + 1]) << 8));
-            LOGI("DEBUG I = %d", i);
+            } while (nb_samplers != 0);
         }
-        int nb_samplers = 0;
-        soundTouch->putSamples(sampleBuffer, numFrames);
-        do {
-            // 接收处理后的sample
-            nb_samplers = soundTouch->receiveSamples(sampleBuffer, resampled_data_size / 2);
-
-
-        } while (nb_samplers != 0);
 
     }
-//	translate(sampleBuffer, resampled_data_size / 2 , bytes_per_sample,
-//			  audioCodecCtx->channels, audioCodecCtx->sample_rate);
-////    LOGI("************* ADJSUT PICTHC *************1*");
-//    /*****************sound touch**************/
-//
-//    convertByteArrayFromShortArray(sampleBuffer, resampled_data_size, audioOutBuf);
+
+    byte *buffer = NULL;
 
     int actualSize = -1;
     if (mUploaderCallback)
@@ -997,11 +981,10 @@ AudioFrame *VideoDecoder::handleAudioFrame() {
         return NULL;
     }
 
-
     AudioFrame *frame = new AudioFrame();
     /** av_frame_get_best_effort_timestamp 实际上获取AVFrame的 int64_t best_effort_timestamp; 这个Filed **/
     frame->position = position;
-    frame->samples = audioOutBuf;
+    frame->samples = buffer;
     frame->size = actualSize;
     frame->duration = av_frame_get_pkt_duration(audioFrame) * audioTimeBase;
     if (frame->duration == 0) {
@@ -1011,7 +994,7 @@ AudioFrame *VideoDecoder::handleAudioFrame() {
         frame->duration =
                 frame->size / (sizeof(float) * numChannels * 2 * audioCodecCtx->sample_rate);
     }
-    LOGI("AFD: %.4f %.4f | %.4f ", frame->position, frame->duration, frame->size / (8.0 * 44100.0));
+//	LOGI("AFD: %.4f %.4f | %.4f ", frame->position, frame->duration, frame->size / (8.0 * 44100.0));
 //	LOGI("leave VideoDecoder::handleAudioFrame()...");
     return frame;
 }

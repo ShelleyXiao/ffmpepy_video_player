@@ -68,7 +68,7 @@ target_link_libraries( native-lib
                        ${PATH_TO_PRE_BUILT}/libswscale.a
                        ${PATH_TO_PRE_BUILT}/libavutil.a
                        ${PATH_TO_PRE_BUILT}/libpostproc.a
-                      # ${PATH_TO_PRE_BUILT}/libfdk-aac.a
-                      # ${PATH_TO_PRE_BUILT}/libvo-aacenc.a
-                     #  ${PATH_TO_PRE_BUILT}/libx264.a
+                       ${PATH_TO_PRE_BUILT}/libfdk-aac.a
+                       ${PATH_TO_PRE_BUILT}/libvo-aacenc.a
+                       ${PATH_TO_PRE_BUILT}/libx264.a
                      )
